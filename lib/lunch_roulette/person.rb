@@ -12,10 +12,7 @@ class LunchRoulette
         @previous_lunches = hash['previous_lunches'].split(',').map{|i| i.to_i }
         config.maxes['lunch_id'] = @previous_lunches.max if @previous_lunches && (@previous_lunches.max > config.maxes['lunch_id'].to_i)
         # Generate previous lunches to person mappings:
-        @previous_lunches.map do |previous_lunch|
-          config.previous_lunches[previous_lunch] ||= LunchGroup.new
-          config.previous_lunches[previous_lunch].people = [config.previous_lunches[previous_lunch].people, self].flatten
-        end
+        
       end
     end
 

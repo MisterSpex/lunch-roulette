@@ -8,7 +8,6 @@ require 'digest'
 
 require 'lunch_roulette/config'
 require 'lunch_roulette/enumerable_extension'
-require 'lunch_roulette/lunch_set'
 require 'lunch_roulette/lunch_group'
 require 'lunch_roulette/person'
 require 'lunch_roulette/output'
@@ -49,7 +48,7 @@ class LunchRoulette
       exit 1
     end
     config.options = options
-  
+
     @participants = compile_participants
     if @participants.size % 2 != 0
       puts "Odd number of participants"
@@ -86,7 +85,7 @@ class LunchRoulette
         lunch_set = Array.new(existing_pairs)
 
         pair = LunchPair.new(first_person, second_person)
-        
+
         #Check whether this is a good combination
         if !pair.matches
           next
@@ -100,14 +99,14 @@ class LunchRoulette
         if reduced_remaining_people.size > 4
           result = create_pairs(lunch_set, reduced_remaining_people, false)
         else
-          # Create all possible combinations of remaining people and create 
+          # Create all possible combinations of remaining people and create
           create_remaining_pairs(reduced_remaining_people).each {|remaining_set|
             if remaining_set.first.matches && remaining_set.last.matches
               @lunch_sets << lunch_set + remaining_set
             end
-          }   
+          }
         end
-      }      
+      }
       break if first_level
     }
   end
@@ -117,10 +116,10 @@ class LunchRoulette
     combinations = []
 
     pair1 = LunchPair.new(set[0], set[1])
-    pair2 = LunchPair.new(set[0], set[2]) 
+    pair2 = LunchPair.new(set[0], set[2])
     pair3 = LunchPair.new(set[0], set[3])
-    pair4 = LunchPair.new(set[1], set[2]) 
-    pair5 = LunchPair.new(set[1], set[3]) 
+    pair4 = LunchPair.new(set[1], set[2])
+    pair5 = LunchPair.new(set[1], set[3])
     pair6 = LunchPair.new(set[2], set[3])
 
     combinations << [pair1, pair6]
@@ -134,10 +133,9 @@ class LunchRoulette
     staff = []
     CSV.foreach(@staff_csv, headers: true) do |row|
       staffer = Person.new(Hash[row])
-      #config.weights.keys.map{|f| config.maxes[f] = staffer.features[f] if staffer.features[f] > config.maxes[f].to_i }
       staff << staffer
     end
-    # Filter out "unlunchables"
+    # Filter "unlunchables"
     staff = staff.select{ |s| s.lunchable }
   end
 end
