@@ -8,7 +8,7 @@ require 'digest'
 
 require 'lunch_roulette/config'
 require 'lunch_roulette/enumerable_extension'
-require 'lunch_roulette/lunch_group'
+require 'lunch_roulette/lunch_pair'
 require 'lunch_roulette/person'
 require 'lunch_roulette/output'
 require 'lunch_roulette/math_extension'
