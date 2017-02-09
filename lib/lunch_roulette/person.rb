@@ -11,10 +11,5 @@ class LunchRoulette
         @previous_lunches = hash['previous_lunches'].split(',').map{|i| i.to_i }
       end
     end
-
-    def config
-      LunchRoulette::Config
-    end
-
   end
 end
