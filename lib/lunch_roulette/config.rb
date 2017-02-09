@@ -7,30 +7,6 @@ class LunchRoulette
       @@previous_lunches = {}
     end
 
-    def self.weights
-      @@config['weights']
-    end
-
-    def self.min_lunch_group_size
-      @@options[:min_lunch_group_size] || @@config['min_lunch_group_size']
-    end
-
-    def self.min_group_score
-      @@config['min_group_score']
-    end
-
-    def self.time_decay_constant
-      @@config['time_decay_constant']
-    end
-
-    def self.match_thresholds
-      (2..min_lunch_group_size)
-    end
-
-    def self.specialty_mappings
-      @@config['specialty_mappings']
-    end
-
     def self.team_mappings
       @@config['team_mappings']
     end

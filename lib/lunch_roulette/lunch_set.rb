@@ -1,4 +1,60 @@
 class LunchRoulette
+
+
+  class Group
+
+    attr_accessor :sets
+
+    def initialize(set)
+      @sets = [set]
+    end
+
+    # Returns unmatched sets
+    public
+    def fill(all_sets)
+      unmatched_sets = []
+
+      all_sets.each {|set|
+        if !contains(set)
+          @sets << set
+        else
+          unmatched_sets << set
+        end
+       
+      }
+      unmatched_sets
+    end
+
+    def contains(set)
+      !(set & @sets.flatten).empty?
+    end
+
+    def add(set)
+      @sets << set
+    end
+
+    public
+    def size
+      @sets.size
+    end
+
+    public
+    def to_s
+      @sets.to_s
+    end
+
+  end
+
+
+
+
+
+
+
+
+
+
+
   class LunchSet
 
     attr_accessor :score, :groups, :valid, :previous_lunch_stats, :previous_lunches
@@ -27,22 +83,22 @@ class LunchRoulette
     end
 
     def generate_groups
-      lunchers = @lunchers.select{ |l| l.lunchable } # filter out The Unlunchables
+      # lunchers = @lunchers.select{ |l| l.lunchable } # filter out The Unlunchables
       groups = []
       min_lunch_group_size = config.min_lunch_group_size
-      until lunchers.empty?
+      until @lunchers.empty?
         # First check whether we have enough people to create a new group
-        if lunchers.size < min_lunch_group_size
+        if @lunchers.size < min_lunch_group_size
           # If we don't have enough people to do a new group
-          lunchers.size.times do
+          @lunchers.size.times do
             # Randomly pick a group to put them in
             random_group = (rand groups.size)
-            groups[random_group] = LunchGroup.new([groups[random_group].people, lunchers.pop].flatten)
+            groups[random_group] = LunchGroup.new([groups[random_group].people, @lunchers.pop].flatten)
           end
         else
           # If we do have enough people to create a new group
           # Pick our minimum number of people and throw them in a group
-          group = LunchGroup.new(lunchers.pop(min_lunch_group_size))
+          group = LunchGroup.new(@lunchers.pop(min_lunch_group_size))
           groups << group
         end
       end

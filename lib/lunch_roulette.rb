@@ -12,10 +12,11 @@ require 'lunch_roulette/lunch_set'
 require 'lunch_roulette/lunch_group'
 require 'lunch_roulette/person'
 require 'lunch_roulette/output'
+require 'lunch_roulette/math_extension'
 
 class LunchRoulette
 
-  attr_reader :results, :staff, :all_valid_sets
+  attr_reader :results, :staff, :lunch_sets, :participants
 
   def initialize(*args)
     LunchRoulette::Config.new
@@ -48,66 +49,112 @@ class LunchRoulette
       exit 1
     end
     config.options = options
+  
+    @participants = compile_participants
+    if @participants.size % 2 != 0
+      puts "Odd number of participants"
+      exit 1
+    end
   end
 
   def config
     LunchRoulette::Config
   end
 
-  def spin!
-    compile_staff
-    candidates = Set.new
-    iterations = config.options[:iterations] || 1_000
-    i = 0.0
-    invalid_sets = 0
-    if config.options[:verbose_output]
-      puts "Generating #{config.options[:iterations]} sets..."
-    end
-    iterations.times do
-      print "#{((i/iterations)*100).round(4)}% Done\r"
-      i += 1
-      l = LunchSet.new(@staff)
-      if l.valid
-        candidates << l
-      else
-        invalid_sets += 1
-      end
-    end
+  def iterate
+    # Shuffle participants to make lunch set unpredictable
+    @participants.shuffle!
 
-    if config.options[:verbose_output]
-      puts "Invalid Sets: #{invalid_sets}"
-      puts "Valid Sets: #{candidates.size}"
-    end
+    @lunch_sets = Set.new
+    create_pairs([], @participants, true)
 
-    @results = {
-      top: candidates.sort{|a,b| b.score <=> a.score }.first(config.options[:most_varied_sets].to_i),
-      bottom: candidates.sort{|a,b| a.score <=> b.score }.first(config.options[:least_varied_sets].to_i)
-    }
-    @all_valid_sets = candidates
+    @lunch_sets
   end
 
-  protected
+  def create_pairs(existing_pairs = [], remaining_people, first_level)
+     # Stop working if there is already a possible lunch set
+    if !@lunch_sets.empty?
+      return
+    end
 
-  def compile_staff
-    @staff = []
+    # Take next person to create a new pair
+    remaining_people.each {|first_person|
+      # Calculate all possible second persons for pair
+      possible_combinations = remaining_people - [first_person]
+
+      possible_combinations.each {|second_person|
+        lunch_set = Array.new(existing_pairs)
+
+        pair = LunchPair.new(first_person, second_person)
+        
+        #Check whether this is a good combination
+        if !pair.matches
+          next
+        end
+
+        lunch_set << pair
+
+        # Recalculate remaining people
+        reduced_remaining_people = possible_combinations - [second_person]
+
+        if reduced_remaining_people.size > 4
+          result = create_pairs(lunch_set, reduced_remaining_people, false)
+        else
+          # Create all possible combinations of remaining people and create 
+          create_remaining_pairs(reduced_remaining_people).each {|remaining_set|
+            if remaining_set.first.matches && remaining_set.last.matches
+              @lunch_sets << lunch_set + remaining_set
+            end
+          }   
+        end
+      }      
+      break if first_level
+    }
+  end
+
+  private
+  def create_remaining_pairs(set)
+    combinations = []
+
+    pair1 = LunchPair.new(set[0], set[1])
+    pair2 = LunchPair.new(set[0], set[2]) 
+    pair3 = LunchPair.new(set[0], set[3])
+    pair4 = LunchPair.new(set[1], set[2]) 
+    pair5 = LunchPair.new(set[1], set[3]) 
+    pair6 = LunchPair.new(set[2], set[3])
+
+    combinations << [pair1, pair6]
+    combinations << [pair2, pair5]
+    combinations << [pair3, pair4]
+    combinations
+  end
+
+  private
+  def compile_participants
+    staff = []
     CSV.foreach(@staff_csv, headers: true) do |row|
       staffer = Person.new(Hash[row])
-      config.weights.keys.map{|f| config.maxes[f] = staffer.features[f] if staffer.features[f] > config.maxes[f].to_i }
-      @staff << staffer
+      #config.weights.keys.map{|f| config.maxes[f] = staffer.features[f] if staffer.features[f] > config.maxes[f].to_i }
+      staff << staffer
     end
+    # Filter out "unlunchables"
+    staff = staff.select{ |s| s.lunchable }
   end
-
 end
 
 l = LunchRoulette.new(ARGV)
-l.spin!
+set = l.iterate
 
-o = LunchRoulette::Output.new(l.results, l.all_valid_sets)
-o.get_results
-o.get_stats_csv if o.config.options[:output_stats]
+set.first.each {|item|
+  puts "#{item.first_person.name} (#{item.first_person.user_id}) - #{item.second_person.name} (#{item.second_person.user_id})"
+}
 
-if l.results[:top].size > 0 || l.results[:bottom].size > 0
-  o.get_new_staff_csv(l.staff)
-else
-  puts "No valid sets generated, sorry."
-end
+#o = LunchRoulette::Output.new(l.results, l.all_valid_sets)
+#o.get_results
+#o.get_stats_csv if o.config.options[:output_stats]
+
+#if l.results[:top].size > 0 || l.results[:bottom].size > 0
+#  o.get_new_staff_csv(l.staff)
+#else
+  #puts "No valid sets generated, sorry."
+#end

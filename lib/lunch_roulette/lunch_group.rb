@@ -1,4 +1,45 @@
 class LunchRoulette
+  
+  class LunchPair
+
+    attr_accessor :first_person, :second_person
+
+    def initialize(first_person, second_person)
+      @first_person = first_person
+      @second_person = second_person
+    end
+
+    public
+    def matches
+      never_had_lunch_together & are_from_different_departments
+    end
+
+    def never_had_lunch_together
+      check = !(@first_person.previous_lunches.include?(@second_person.user_id.to_i))
+      
+      if(!check)
+        puts "#{@first_person.previous_lunches} --> #{second_person.user_id.to_i}"
+      else
+        puts "x"
+      end
+
+      check
+    end
+
+    def are_from_different_departments
+      @first_person.team != @second_person.team
+    end
+  end
+
+
+
+
+
+
+
+
+
+
   class LunchGroup
 
     attr_accessor :people, :score, :valid, :previous_lunches, :scores, :id
@@ -13,7 +54,7 @@ class LunchRoulette
       # Calculate the average variance across all features for all members.
       # Since some groups will have 1 or 2 more people than others, we can't use sum
       @scores = Hash.new
-      calculate_group_score
+      #calculate_group_score
       @score = previous_lunches_factor * scores.values.sum / people.size.to_f
       @scores['previous_lunches_factor'] = previous_lunches_factor
       @valid = true
