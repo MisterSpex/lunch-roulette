@@ -1,4 +1,5 @@
 class LunchRoulette
+
   class Person
     attr_accessor :name, :lunchable, :previous_lunches, :team, :user_id
     def initialize(hash)
@@ -12,4 +13,5 @@ class LunchRoulette
       end
     end
   end
+
 end
