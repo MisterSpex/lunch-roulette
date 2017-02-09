@@ -63,16 +63,18 @@ class LunchRoulette
   def iterate
     # Shuffle participants to make lunch set unpredictable
     @participants.shuffle!
-
-    @lunch_sets = Set.new
+    @lunch_set = nil
+    # Break after first iteration for optimization reasons (true)
+    # Explaination: After first iteration without match for the first person there will be no more valid lunch set
     create_pairs([], @participants, true)
 
-    @lunch_sets
+    @lunch_set
   end
 
-  def create_pairs(existing_pairs = [], remaining_people, first_level)
-     # Stop working if there is already a possible lunch set
-    if !@lunch_sets.empty?
+
+  def create_pairs(existing_pairs = [], remaining_people, break_without_deep_recursion)
+    # Stop working if there is already a possible lunch set
+    if !@lunch_set.nil?
       return
     end
 
@@ -97,17 +99,21 @@ class LunchRoulette
         reduced_remaining_people = possible_combinations - [second_person]
 
         if reduced_remaining_people.size > 4
-          result = create_pairs(lunch_set, reduced_remaining_people, false)
+          create_pairs(lunch_set, reduced_remaining_people, false)
         else
           # Create all possible combinations of remaining people and create
           create_remaining_pairs(reduced_remaining_people).each {|remaining_set|
             if remaining_set.first.matches && remaining_set.last.matches
-              @lunch_sets << lunch_set + remaining_set
+              @lunch_set = lunch_set + remaining_set
+              break_without_deep_recursion = true
+              break
             end
           }
         end
+        # Optimization: # Stop working if there is already a possible lunch set
+        break if !@lunch_set.nil?
       }
-      break if first_level
+      break if break_without_deep_recursion
     }
   end
 
@@ -143,7 +149,11 @@ end
 l = LunchRoulette.new(ARGV)
 set = l.iterate
 
-set.first.each {|item|
+#o = LunchRoulette::Output.new(set)
+
+puts "#{set.size}"
+
+set.each {|item|
   puts "#{item.first_person.name} (#{item.first_person.user_id}) - #{item.second_person.name} (#{item.second_person.user_id})"
 }
 
