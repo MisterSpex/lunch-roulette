@@ -1,5 +1,4 @@
 class LunchRoulette
-
   class LunchPair
 
     attr_accessor :first_person, :second_person
@@ -29,6 +28,19 @@ class LunchRoulette
     def are_from_different_departments
       @first_person.team != @second_person.team
     end
-  end
 
+    def people
+      [first_person, second_person]
+    end
+
+    # Returns the other person of this pair
+    def partner(person)
+      if person == first_person
+        second_person
+      else
+        first_person
+      end
+    end
+
+  end
 end

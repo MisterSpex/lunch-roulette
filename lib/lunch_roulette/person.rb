@@ -1,7 +1,8 @@
 class LunchRoulette
-
   class Person
+
     attr_accessor :name, :lunchable, :previous_lunches, :team, :user_id
+
     def initialize(hash)
       @lunchable = %w(true TRUE).include? hash['lunchable']
       @team = hash['team']
@@ -12,6 +13,10 @@ class LunchRoulette
         @previous_lunches = hash['previous_lunches'].split(',').map{|i| i.to_i }
       end
     end
-  end
 
+    def ==(another_person)
+      user_id == another_person.user_id
+    end
+
+  end
 end

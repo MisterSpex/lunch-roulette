@@ -15,8 +15,6 @@ require 'lunch_roulette/math_extension'
 
 class LunchRoulette
 
-  attr_reader :results, :staff, :lunch_sets, :participants
-
   def initialize(*args)
     LunchRoulette::Config.new
     options = Hash.new
@@ -48,29 +46,22 @@ class LunchRoulette
       exit 1
     end
     config.options = options
-
-    @participants = compile_participants
-    if @participants.size % 2 != 0
-      puts "Odd number of participants"
-      exit 1
-    end
   end
 
   def config
     LunchRoulette::Config
   end
 
-  def iterate
+  def iterate(participants)
     # Shuffle participants to make lunch set unpredictable
-    @participants.shuffle!
+    participants.shuffle!
     @lunch_set = nil
     # Break after first iteration for optimization reasons (true)
     # Explaination: After first iteration without match for the first person there will be no more valid lunch set
-    create_pairs([], @participants, true)
+    create_pairs([], participants, true)
 
     @lunch_set
   end
-
 
   def create_pairs(existing_pairs = [], remaining_people, break_without_deep_recursion)
     # Stop working if there is already a possible lunch set
@@ -117,7 +108,6 @@ class LunchRoulette
     }
   end
 
-  private
   def create_remaining_pairs(set)
     combinations = []
 
@@ -134,28 +124,39 @@ class LunchRoulette
     combinations
   end
 
-  private
-  def compile_participants
+  def load_staff_list
     staff = []
     CSV.foreach(@staff_csv, headers: true) do |row|
       staffer = Person.new(Hash[row])
       staff << staffer
     end
-    # Filter "unlunchables"
-    staff = staff.select{ |s| s.lunchable }
+    staff
   end
 end
 
+
+####
 l = LunchRoulette.new(ARGV)
-set = l.iterate
 
-#o = LunchRoulette::Output.new(set)
+# Load staff list and filter for "unlunchables"
+staff = l.load_staff_list
+participants = staff.select{ |s| s.lunchable }
+if participants.size % 2 != 0
+  puts "Odd number of participants"
+  exit 1
+end
 
-puts "#{set.size}"
+# Calculate lunch set
+set = l.iterate(participants)
 
-set.each {|item|
-  puts "#{item.first_person.name} (#{item.first_person.user_id}) - #{item.second_person.name} (#{item.second_person.user_id})"
-}
+
+if set.nil?
+  puts "No possible lunch set found"
+else
+  o = LunchRoulette::Output.new(set)
+  o.print_result
+  o.write_new_staff_csv(staff)
+end
 
 #o = LunchRoulette::Output.new(l.results, l.all_valid_sets)
 #o.get_results
