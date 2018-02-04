@@ -2,34 +2,17 @@ $:.push "./lib"
 
 require 'csv'
 require 'optparse'
-require 'yaml'
 require 'set'
-require 'digest'
 
-require 'lunch_roulette/config'
-require 'lunch_roulette/enumerable_extension'
 require 'lunch_roulette/lunch_pair'
 require 'lunch_roulette/person'
 require 'lunch_roulette/output'
-require 'lunch_roulette/math_extension'
 
 class LunchRoulette
 
   def initialize(*args)
-    LunchRoulette::Config.new
-    options = Hash.new
-    options[:most_varied_sets] = 1
-
     o = OptionParser.new do |o|
-      o.banner = "Usage: ruby lunch_roulette_generator.rb staff.csv [OPTIONS]"
-      o.on('-n', '--min-group-size N', 'Minimum Lunch Group Size (default 4)') {|n| options[:min_lunch_group_size] = n.to_i }
-      o.on('-i', '--iterations I', 'Number of Iterations (default 1,000)') {|i| options[:iterations] = i.to_i }
-      o.on('-m', '--most-varied-sets M', 'Number of most varied sets to generate (default 1)') {|i| options[:most_varied_sets] = i.to_i }
-      o.on('-l', '--least-varied-sets L', 'Number of least varied sets to generate (default 0)') {|i| options[:least_varied_sets] = i.to_i }
-      o.on('-v', '--verbose', 'Verbose output') { options[:verbose_output] = true }
-      o.on('-d', '--dont-write', "Don't write to files") { options[:dont_write] = true }
-      o.on('-s', '--output-stats', "Output a csv of stats for all valid generated sets") { options[:output_stats] = true }
-      o.on('-h', '--help', 'Print this help') { puts o; exit }
+      o.banner = "Usage: ruby lunch_roulette_generator.rb staff.csv"
       o.parse!
     end
 
@@ -45,12 +28,8 @@ class LunchRoulette
       puts o
       exit 1
     end
-    config.options = options
   end
 
-  def config
-    LunchRoulette::Config
-  end
 
   def iterate(participants)
     # Shuffle participants to make lunch set unpredictable
@@ -149,7 +128,7 @@ end
 # Calculate lunch set
 set = l.iterate(participants)
 
-
+# Print & save result
 if set.nil?
   puts "No possible lunch set found"
 else
@@ -157,13 +136,3 @@ else
   o.print_result
   o.write_new_staff_csv(staff)
 end
-
-#o = LunchRoulette::Output.new(l.results, l.all_valid_sets)
-#o.get_results
-#o.get_stats_csv if o.config.options[:output_stats]
-
-#if l.results[:top].size > 0 || l.results[:bottom].size > 0
-#  o.get_new_staff_csv(l.staff)
-#else
-  #puts "No valid sets generated, sorry."
-#end

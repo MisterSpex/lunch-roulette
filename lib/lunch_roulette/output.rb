@@ -6,10 +6,6 @@ class LunchRoulette
       @all_valid_sets
     end
 
-    def config
-      LunchRoulette::Config
-    end
-
     def print_result
       @result.each {|pair|
         o = [ "#{pair.first_person.name} (#{pair.first_person.user_id})", "#{pair.second_person.name} (#{pair.second_person.user_id})" ]
@@ -25,20 +21,16 @@ class LunchRoulette
           }
       }
 
-      if config.options[:dont_write]
-        file = "/dev/null"
-      else
-        timestamp = Time.now.strftime "%Y%m%d-%H%M%S"
-        file = "data/output/#{timestamp}.csv"
-      end
+      timestamp = Time.now.strftime "%Y%m%d-%H%M%S"
+      file = "data/output/#{timestamp}.csv"
+
       CSV.open(file, "w") do |csv|
         csv << %w(user_id name team lunchable previous_lunches)
         staff.each do |luncher|
           o = [ luncher.user_id, luncher.name, luncher.team, luncher.lunchable, [luncher.previous_lunches, person_lunch_mapping[luncher.user_id]].flatten.join(",") ]
-          puts o.join("\t") if config.options[:verbose_output]
           csv << o
         end
-        puts "\nStaff file written to: #{file}\n" unless config.options[:dont_write]
+        puts "\nStaff file written to: #{file}\n"
       end
     end
 
