@@ -25,7 +25,6 @@ class LunchRoulette
       else
         puts "Error attempting to load #{staff_csv}"
       end
-      puts o
       exit 1
     end
   end
